@@ -5,87 +5,59 @@ import "core:math/rand"
 
 
 Edge :: struct {
-	from:   u64,
 	to:     u64,
-	weight: f32,
+	weight: i8,
 }
 
-EdgesMap :: map[u64]Edge
-
-Node :: struct {
-	index: u64,
-	edges: EdgesMap,
-	label: string,
-}
-
-Graph :: [dynamic]Node
+Graph :: map[u64][dynamic]Edge
 
 
-generateGraph :: proc(
-	nodeCount: u64,
-	minEdgedPerNode: u64,
-	maxEdgesPerNode: u64,
-) -> (
-	Graph,
-	bool,
-) {
-	if maxEdgesPerNode >= nodeCount || maxEdgesPerNode < minEdgedPerNode || nodeCount == 0 {
+generateGraph :: proc(nodeCount: u64, minEdges: u64, maxEdges: u64) -> (Graph, bool) {
+	if maxEdges >= nodeCount || maxEdges <= minEdges || nodeCount == 0 {
 		return {}, false
 	}
 
 	rand.reset(nodeCount)
 
 	G: Graph
-	defer delete(G)
 
 	for nodeIdx in 0 ..< nodeCount {
-		fmt.printfln("\n[DEBUG] NodeIndex: %d", nodeIdx)
 		rand.reset(nodeIdx)
-		edgeCount := rand.uint64_range(minEdgedPerNode, maxEdgesPerNode)
-		fmt.printfln("[DEBUG] EdgeCount: %d", edgeCount)
+		edgeCount := rand.uint64_range(minEdges, maxEdges)
 
-		edges: EdgesMap
-		defer delete(edges)
+		edges: [dynamic]Edge
 
 		for len(edges) < int(edgeCount) {
-			// rand.reset()
 			to := rand.uint64_max(nodeCount)
+			if to == nodeIdx do continue // no self-loops
 
-			if to == nodeIdx do continue
-
-			weight := rand.float32_range(-10, 10)
-			edges[u64(len(edges))] = Edge{nodeIdx, to, weight}
-
-			fmt.printfln("[DEBUG] %d -> %d", nodeIdx, to)
+			weight := i8(rand.int_range(-10, 10))
+			append(&edges, Edge{to, weight})
 		}
 
-		node := Node{nodeIdx, edges, fmt.tprintf("%d", nodeIdx)}
-		append(&G, node)
+		G[nodeIdx] = edges
 	}
 
 	return G, true
 }
 
 
-main :: proc() {
-	fmt.println("Hello!")
+printGraph :: proc(g: Graph) {
+	fmt.println("\nGraph:")
 
-	n := 200
+	for from, edges in g {
+		fmt.printfln("  Node %d (edges: %d)", from, len(edges))
 
-	num := rand.int_max(n)
-	num2 := rand.float32_uniform(0, 1)
-
-	fmt.println("Number: ", num)
-	fmt.println("Number2: ", num2)
-
-	G, ok := generateGraph(10, 1, 5)
-
-	if ok {
-		for g, i in G {
-			fmt.printfln("%d \t-> %d,%s: %v", i + 1, g.index, g.label, g.edges)
+		for edge, i in edges {
+			fmt.printfln("    - [%d]: %d (%d)", i, edge.to, edge.weight)
 		}
 	}
+}
 
 
-	fmt.printfln("\n\n%v", G)
+main :: proc() {
+	G, ok := generateGraph(10, 1, 5)
+	defer delete(G)
+
+	if ok do printGraph(G)
 }
