@@ -85,7 +85,11 @@ bfs :: proc(G: Graph, start, dest: u64) -> [dynamic]u64 {
 		}
 	}
 
-	// reconstruct path
+	return reconstructPath(parent, start, dest)
+}
+
+
+reconstructPath :: proc(parent: map[u64]Maybe(u64), start, dest: u64) -> [dynamic]u64 {
 	path: [dynamic]u64
 	current: Maybe(u64) = dest
 
@@ -95,10 +99,17 @@ bfs :: proc(G: Graph, start, dest: u64) -> [dynamic]u64 {
 	}
 
 	slice.reverse(path[:])
+
 	return path
 }
 
 
+dijkstra :: proc(G: Graph, start, dest: u64) -> [dynamic]u64 {
+	return {}
+}
+
+
+// TODO: currently there is no guarantee that 'dest' is reachable from 'start'
 main :: proc() {
 	numNodes: u64 = 10
 	minEdges: u64 = 1
@@ -112,8 +123,14 @@ main :: proc() {
 	printGraph(G)
 	start: u64 = 0
 	dest: u64 = 2
-	path := bfs(G, start, dest)
-	defer delete(path)
 
-	fmt.printfln("\nShortest path from %d to %d: %v", start, dest, path)
+	fmt.printfln("\nShortest path from %d to %d:", start, dest)
+
+	pathBfs := bfs(G, start, dest)
+	defer delete(pathBfs)
+	fmt.printfln("    BFS: %v", pathBfs)
+
+	pathDijk := dijkstra(G, start, dest)
+	defer delete(pathDijk)
+	fmt.printfln("    Disjkstra: %v", pathDijk)
 }
