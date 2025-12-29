@@ -6,6 +6,9 @@ This repo is a personal learning project focussed on implementing some graph alg
 
 My main goal is to understand the algorithms and have some fun playing around...
 
+> Odin is a general-purpose programming language with distinct typing built for high performance, modern systems and data-oriented programming.
+
+> Odin is the C alternative for the Joy of Programming.
 
 ## Further Ideas
 When dealing with a graph with non-negative weighted edges, the [Dijkstra](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm) is the go-to algorithm with its $O(m + n log n)$ time bound on sparse graphs. Recently [Duan et al. (2025)](https://arxiv.org/abs/2504.17033) presented a deterministic $O(m log^{2/3} n)$ -time algorithm for single-source shortest paths (SSSP) on directed graphs with real non-negative edge weights, showing that Dijkstra's algorithm is not optimal for SSSP.
