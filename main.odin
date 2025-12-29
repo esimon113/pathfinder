@@ -1,7 +1,9 @@
-package main
+package pathfinder
 
+import "core:container/priority_queue"
 import "core:container/queue"
 import "core:fmt"
+import "core:math"
 import "core:math/rand"
 import "core:slice"
 
@@ -12,6 +14,13 @@ Edge :: struct {
 }
 
 Graph :: map[u64][dynamic]Edge
+
+INF64 := u64(math.inf_f64(1))
+
+
+isInf64 :: proc(a: u64) -> bool {
+	return a == INF64
+}
 
 
 generateGraph :: proc(nodeCount, minEdges, maxEdges: u64, maxWeight: u8) -> (Graph, bool) {
@@ -58,7 +67,7 @@ printGraph :: proc(g: Graph) {
 
 
 // ignore weights with BFS
-// Returns a dynamic array of node ids
+// Returns a dynamic array of node ids and the cost of the path
 bfs :: proc(G: Graph, start, dest: u64) -> [dynamic]u64 {
 	visited := make([dynamic]bool, len(G))
 	parent: map[u64]Maybe(u64) // maps child node id to parent node id
@@ -85,11 +94,11 @@ bfs :: proc(G: Graph, start, dest: u64) -> [dynamic]u64 {
 		}
 	}
 
-	return reconstructPath(parent, start, dest)
+	return reconstructPath(parent, dest)
 }
 
 
-reconstructPath :: proc(parent: map[u64]Maybe(u64), start, dest: u64) -> [dynamic]u64 {
+reconstructPath :: proc(parent: map[u64]Maybe(u64), dest: u64) -> [dynamic]u64 {
 	path: [dynamic]u64
 	current: Maybe(u64) = dest
 
@@ -104,16 +113,60 @@ reconstructPath :: proc(parent: map[u64]Maybe(u64), start, dest: u64) -> [dynami
 }
 
 
-dijkstra :: proc(G: Graph, start, dest: u64) -> [dynamic]u64 {
-	return {}
+// Returns a dynamic array of node ids (path) and the cost of the path
+dijkstra :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, u64) {
+	costs := make([dynamic]u64, len(G))
+	defer delete(costs)
+	parent: map[u64]Maybe(u64)
+
+	PriorityNode :: struct {
+		idx:  u64,
+		cost: u64,
+	}
+
+	unvisited: priority_queue.Priority_Queue(PriorityNode)
+	priority_queue.init(
+		&unvisited,
+		proc(a, b: PriorityNode) -> bool {return a.cost < b.cost},
+		priority_queue.default_swap_proc(PriorityNode),
+	)
+
+	for nodeIdx in 0 ..< len(G) {
+		costs[u64(nodeIdx)] = INF64
+	}
+
+	costs[start] = 0
+	parent[start] = nil
+	priority_queue.push(&unvisited, PriorityNode{start, 0})
+
+	for priority_queue.len(unvisited) > 0 {
+		current := priority_queue.pop(&unvisited)
+
+		if current.cost > costs[current.idx] do continue
+		if current.idx == dest do break
+
+		for edge in G[current.idx] {
+			newCost := costs[current.idx] + u64(edge.weight)
+
+			if newCost < costs[edge.to] {
+				costs[edge.to] = newCost
+				parent[edge.to] = current.idx
+				priority_queue.push(&unvisited, PriorityNode{edge.to, newCost})
+			}
+		}
+	}
+
+	return reconstructPath(parent, dest), costs[dest]
 }
 
 
 // TODO: currently there is no guarantee that 'dest' is reachable from 'start'
+// TODO: Make this work for graphs wiht different types
 main :: proc() {
-	numNodes: u64 = 10
+	// TODO: get parameters as command line arguments:
+	numNodes: u64 = 100
 	minEdges: u64 = 1
-	maxEdges: u64 = 5
+	maxEdges: u64 = 10
 	maxWeight: u8 = 10
 	G, ok := generateGraph(numNodes, minEdges, maxEdges, maxWeight)
 	defer delete(G)
@@ -128,9 +181,9 @@ main :: proc() {
 
 	pathBfs := bfs(G, start, dest)
 	defer delete(pathBfs)
-	fmt.printfln("    BFS: %v", pathBfs)
+	fmt.printfln("    BFS (dist: %d): %v", len(pathBfs), pathBfs)
 
-	pathDijk := dijkstra(G, start, dest)
+	pathDijk, costDijk := dijkstra(G, start, dest)
 	defer delete(pathDijk)
-	fmt.printfln("    Disjkstra: %v", pathDijk)
+	fmt.printfln("    Dijkstra (cost: %d): %v", costDijk, pathDijk)
 }
