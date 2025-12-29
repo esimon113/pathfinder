@@ -8,13 +8,13 @@ import "core:slice"
 
 Edge :: struct {
 	to:     u64,
-	weight: i8,
+	weight: u8,
 }
 
 Graph :: map[u64][dynamic]Edge
 
 
-generateGraph :: proc(nodeCount, minEdges, maxEdges: u64) -> (Graph, bool) {
+generateGraph :: proc(nodeCount, minEdges, maxEdges: u64, maxWeight: u8) -> (Graph, bool) {
 	if maxEdges >= nodeCount || maxEdges <= minEdges || nodeCount == 0 {
 		return {}, false
 	}
@@ -33,7 +33,7 @@ generateGraph :: proc(nodeCount, minEdges, maxEdges: u64) -> (Graph, bool) {
 			to := rand.uint64_max(nodeCount)
 			if to == nodeIdx do continue // no self-loops
 
-			weight := i8(rand.int_range(-10, 10))
+			weight := u8(rand.int_max(int(maxWeight)))
 			append(&edges, Edge{to, weight})
 		}
 
@@ -96,12 +96,15 @@ bfs :: proc(G: Graph, start, dest: u64) -> [dynamic]u64 {
 
 	slice.reverse(path[:])
 	return path
-
 }
 
 
 main :: proc() {
-	G, ok := generateGraph(10, 1, 5)
+	numNodes: u64 = 10
+	minEdges: u64 = 1
+	maxEdges: u64 = 5
+	maxWeight: u8 = 10
+	G, ok := generateGraph(numNodes, minEdges, maxEdges, maxWeight)
 	defer delete(G)
 
 	if !ok do return
