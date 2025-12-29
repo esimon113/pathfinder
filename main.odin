@@ -3,6 +3,7 @@ package pathfinder
 import "core:container/priority_queue"
 import "core:container/queue"
 import "core:fmt"
+import "core:math"
 import "core:math/rand"
 import "core:slice"
 
@@ -10,27 +11,20 @@ import "core:slice"
 Edge :: struct {
 	from:   u64,
 	to:     u64,
-	weight: i8,
+	weight: f32,
 }
 
 Graph :: map[u64][dynamic]Edge
 
-INF64 := i64(9223372036854775807)
-
-
-isInf64 :: proc(a: i64) -> bool {
-	return a == INF64
-}
-
 
 generateGraph :: proc(
 	nodeCount, minEdges, maxEdges: u64,
-	minWeight, maxWeight: i8,
+	minWeight, maxWeight: f32,
 ) -> (
 	Graph,
 	bool,
 ) {
-	if maxEdges >= nodeCount || maxEdges <= minEdges || nodeCount == 0 {
+	if maxEdges >= nodeCount || maxEdges <= minEdges || nodeCount == 0 || maxWeight <= minWeight {
 		return {}, false
 	}
 
@@ -48,13 +42,59 @@ generateGraph :: proc(
 			to := rand.uint64_max(nodeCount)
 			if to == nodeIdx do continue // no self-loops
 
-			weight := i8(rand.int_range(int(minWeight), int(maxWeight)))
+			weight := f32(rand.float32_range(minWeight, maxWeight))
 			append(&edges, Edge{u64(nodeIdx), to, weight})
 		}
 
 		G[nodeIdx] = edges
 	}
 
+	return G, true
+}
+
+
+// Guarantees that there are no negative cycles in the graph.
+// This is important for the bellmann-ford algorithm
+generateGraphNonNegativeCycles :: proc(
+	nodeCount, minEdges, maxEdges: u64,
+	minWeight, maxWeight: f32,
+) -> (
+	Graph,
+	bool,
+) {
+	if maxEdges >= nodeCount || maxEdges <= minEdges || nodeCount == 0 || maxWeight <= minWeight {
+		return {}, false
+	}
+
+	rand.reset(nodeCount)
+
+	G: Graph
+
+	potentials := make([dynamic]f32, nodeCount)
+	defer delete(potentials)
+
+	for i in 0 ..< nodeCount {
+		potentials[i] = rand.float32_range(-10, 10)
+	}
+
+	for nodeIdx in 0 ..< nodeCount {
+		rand.reset(nodeIdx)
+		edgeCount := rand.uint64_range(minEdges, maxEdges)
+
+		edges: [dynamic]Edge
+
+		for len(edges) < int(edgeCount) {
+			to := rand.uint64_max(nodeCount)
+			if to == nodeIdx do continue
+
+			baseWeight := rand.float32_range(minWeight, maxWeight)
+			if baseWeight < 0 do continue
+			weight := baseWeight + potentials[to] - potentials[nodeIdx]
+
+			append(&edges, Edge{u64(nodeIdx), to, weight})
+		}
+		G[nodeIdx] = edges
+	}
 	return G, true
 }
 
@@ -122,17 +162,17 @@ reconstructPath :: proc(parent: map[u64]Maybe(u64), dest: u64) -> [dynamic]u64 {
 
 
 // Returns a dynamic array of node ids (path) and the cost of the path
-dijkstra :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, i64) {
-	costs := make([dynamic]i64, len(G))
+dijkstra :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, f32) {
+	costs := make([dynamic]f32, len(G))
 	defer delete(costs)
 	parent: map[u64]Maybe(u64)
 	defer delete(parent)
 
-	slice.fill(costs[:], INF64)
+	slice.fill(costs[:], math.INF_F32)
 
 	PriorityNode :: struct {
 		idx:  u64,
-		cost: i64,
+		cost: f32,
 	}
 
 	unvisited: priority_queue.Priority_Queue(PriorityNode)
@@ -153,7 +193,7 @@ dijkstra :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, i64) {
 		if current.idx == dest do break
 
 		for edge in G[current.idx] {
-			newCost := costs[current.idx] + i64(edge.weight)
+			newCost := costs[current.idx] + edge.weight
 
 			if newCost < costs[edge.to] {
 				costs[edge.to] = newCost
@@ -183,24 +223,24 @@ getAllEdges :: proc(G: Graph) -> [dynamic]Edge {
 
 // Regards negative edge weights
 // Returns a dynamic array of node ids (path) and the cost of the path
-bellmanFord :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, i64) {
-	costs := make([dynamic]i64, len(G))
+bellmanFord :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, f32) {
+	costs := make([dynamic]f32, len(G))
 	defer delete(costs)
 	parent: map[u64]Maybe(u64)
 	defer delete(parent)
 	allEdges := getAllEdges(G)
 	defer delete(allEdges)
 
-	slice.fill(costs[:], INF64)
+	slice.fill(costs[:], math.INF_F32)
 	costs[start] = 0
 	parent[start] = nil
 
 
 	for _ in 0 ..< len(G) - 1 {
 		for edge in allEdges {
-			if isInf64(costs[edge.from]) do continue
+			if math.is_inf_f32(costs[edge.from]) do continue
 
-			newCost := costs[edge.from] + i64(edge.weight)
+			newCost := costs[edge.from] + edge.weight
 			if newCost < costs[edge.to] {
 				costs[edge.to] = newCost
 				parent[edge.to] = edge.from
@@ -209,8 +249,8 @@ bellmanFord :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, i64) {
 	}
 
 	for edge in allEdges {
-		if !isInf64(costs[edge.from]) && !isInf64(costs[edge.to]) {
-			if costs[edge.to] > costs[edge.from] + i64(edge.weight) {
+		if !math.is_inf_f32(costs[edge.from]) {
+			if costs[edge.to] > costs[edge.from] + edge.weight {
 				fmt.printfln("Detected negative cycle")
 				return {}, 0
 			}
@@ -228,9 +268,10 @@ main :: proc() {
 	numNodes: u64 = 100
 	minEdges: u64 = 1
 	maxEdges: u64 = 10
-	minWeight: i8 = -10
-	maxWeight: i8 = 10
-	G, ok := generateGraph(numNodes, minEdges, maxEdges, minWeight, maxWeight)
+	minWeight: f32 = -10
+	maxWeight: f32 = 10
+	// G, ok := generateGraph(numNodes, minEdges, maxEdges, minWeight, maxWeight)
+	G, ok := generateGraphNonNegativeCycles(numNodes, minEdges, maxEdges, minWeight, maxWeight)
 	defer delete(G)
 
 	if !ok do return
@@ -247,9 +288,9 @@ main :: proc() {
 
 	// pathDijk, costDijk := dijkstra(G, start, dest)
 	// defer delete(pathDijk)
-	// fmt.printfln("    Dijkstra (cost: %d): %v", costDijk, pathDijk)
+	// fmt.printfln("    Dijkstra (cost: %f): %v", costDijk, pathDijk)
 
 	pathBF, costBF := bellmanFord(G, start, dest)
 	defer delete(pathBF)
-	fmt.printfln("    Bellman-Ford (cost: %d): %v", costBF, pathBF)
+	fmt.printfln("    Bellman-Ford (cost: %f): %v", costBF, pathBF)
 }
