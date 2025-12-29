@@ -1,7 +1,9 @@
 package main
 
+import "core:container/queue"
 import "core:fmt"
 import "core:math/rand"
+import "core:slice"
 
 
 Edge :: struct {
@@ -12,7 +14,7 @@ Edge :: struct {
 Graph :: map[u64][dynamic]Edge
 
 
-generateGraph :: proc(nodeCount: u64, minEdges: u64, maxEdges: u64) -> (Graph, bool) {
+generateGraph :: proc(nodeCount, minEdges, maxEdges: u64) -> (Graph, bool) {
 	if maxEdges >= nodeCount || maxEdges <= minEdges || nodeCount == 0 {
 		return {}, false
 	}
@@ -55,9 +57,60 @@ printGraph :: proc(g: Graph) {
 }
 
 
+// ignore weights with BFS
+// Returns a dynamic array of node ids
+bfs :: proc(G: Graph, start, dest: u64) -> [dynamic]u64 {
+	visited := make([dynamic]bool, len(G))
+	parent: map[u64]Maybe(u64) // maps child node id to parent node id
+	for g in G do visited[g] = false
+
+	pending: queue.Queue(u64)
+	queue.init(&pending)
+	queue.enqueue(&pending, start)
+
+	visited[start] = true
+	parent[start] = nil
+
+	for queue.len(pending) > 0 {
+		idx := queue.dequeue(&pending)
+
+		if idx == dest do break
+
+		for edge in G[idx] {
+			if !visited[edge.to] {
+				queue.enqueue(&pending, edge.to)
+				visited[edge.to] = true
+				parent[edge.to] = idx
+			}
+		}
+	}
+
+	// reconstruct path
+	path: [dynamic]u64
+	current: Maybe(u64) = dest
+
+	for current != nil {
+		append(&path, current.?)
+		current = parent[current.?]
+	}
+
+	slice.reverse(path[:])
+	return path
+
+}
+
+
 main :: proc() {
 	G, ok := generateGraph(10, 1, 5)
 	defer delete(G)
 
-	if ok do printGraph(G)
+	if !ok do return
+
+	printGraph(G)
+	start: u64 = 0
+	dest: u64 = 2
+	path := bfs(G, start, dest)
+	defer delete(path)
+
+	fmt.printfln("\nShortest path from %d to %d: %v", start, dest, path)
 }
