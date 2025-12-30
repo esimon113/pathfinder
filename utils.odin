@@ -12,7 +12,7 @@ printGraph :: proc(g: Graph) {
 		fmt.printfln("  Node %d (edges: %d)", from, len(edges))
 
 		for edge, i in edges {
-			fmt.printfln("    - [%d]: %d (%d)", i, edge.to, edge.weight)
+			fmt.printfln("    - [%d]: %d (%.2f)", i, edge.to, edge.weight)
 		}
 	}
 }
