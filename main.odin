@@ -15,8 +15,16 @@ main :: proc() {
 	maxEdges: u64 = 10
 	minWeight: f32 = -10
 	maxWeight: f32 = 10
-	// G, ok := generateGraph(numNodes, minEdges, maxEdges, minWeight, maxWeight)
-	G, ok := generateGraphNonNegativeCycles(numNodes, minEdges, maxEdges, minWeight, maxWeight)
+	withNegativeCycles: bool = false
+
+	G: Graph
+	ok: bool
+
+	if withNegativeCycles {
+		G, ok = generateGraph(numNodes, minEdges, maxEdges, minWeight, maxWeight)
+	} else {
+		G, ok = generateGraphNonNegativeCycles(numNodes, minEdges, maxEdges, minWeight, maxWeight)
+	}
 	defer delete(G)
 
 	if !ok do return
