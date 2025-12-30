@@ -92,11 +92,50 @@ odin run . 100 -n -v
 ```
 
 
-## Further Ideas
-When dealing with a graph with non-negative weighted edges, the [Dijkstra](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm) is the go-to algorithm with its $O(m + n log n)$ time bound on sparse graphs. Recently [Duan et al. (2025)](https://arxiv.org/abs/2504.17033) presented a deterministic $O(m log^{2/3} n)$ -time algorithm for single-source shortest paths (SSSP) on directed graphs with real non-negative edge weights, showing that Dijkstra's algorithm is not optimal for SSSP.
+## Inspirations / Future Ideas
+
+### Shortest Paths
+- [Floyd-Warshall Algorithm](https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm)
+- [A* Search Algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm)
+- [Johnson's Algorithm](https://en.wikipedia.org/wiki/Johnson%27s_algorithm)
+- [Duan et al. (2025)](https://arxiv.org/abs/2504.17033)
+
+### Minimum Spanning Tree (greedy algorithms)
+- [Kruskal's Algorithm](https://en.wikipedia.org/wiki/Kruskal%27s_algorithm)
+- [Prim's Algorithm](https://en.wikipedia.org/wiki/Prim%27s_algorithm)
+
+### Max-Flow Algorithms
+- [Ford-Fulkerson Algorithm](https://en.wikipedia.org/wiki/Ford%E2%80%93Fulkerson_algorithm)
+- [Dinic's Algorithm](https://en.wikipedia.org/wiki/Dinic%27s_algorithm)
+
+### Strongly Connected Components
+- [Kosaraju-Sharir's Algorithm](https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm)
+- [Trajan's Algorithm](https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm)
+
+### Topological Sort
+- [Kahn's Algorithm](https://medium.com/@kartikgeu/kahns-algorithm-a-step-by-step-guide-to-topological-sorting-in-graphs-6c16fd44d78d)
+
+### Graph Coloring Algorithms
+- [Greedy Algorihtm](https://en.wikipedia.org/wiki/Greedy_coloring)
+- [Welsh-Powell Algorithm](https://www.tutorialspoint.com/welsh-powell-graph-colouring-algorithm)
+- [DSATUR](https://towardsdatascience.com/the-graph-coloring-problem-exact-and-heuristic-solutions-169dce4d88ab/)
+- [Backtracking](https://pencilprogrammer.com/algorithms/graph-coloring-problem/)
+
+### Tours through Graphs
+- [Hamiltonian Paths](https://en.wikipedia.org/wiki/Hamiltonian_path)
+- [Eulerian Paths and Cycles](https://www.geeksforgeeks.org/dsa/eulerian-path-and-circuit/)
+- [The Travelling Salesperson Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem)
+
+### Other
+- [LEACH Algorithm](https://en.wikipedia.org/wiki/Low-energy_adaptive_clustering_hierarchy)
+- [Directed Diffusion Algorithm](https://www.sciencedirect.com/topics/computer-science/directed-diffusion)
+- Algorithm visualization: Build some sort of GUI
+- Benchmarks
 
 
-## Resources
+## Resources / Interesting
 - [Kubica (2025) "Graph Algorithms The Fun Way"](https://nostarch.com/graph-algorithms-fun-way)
 - [Odin Lang Docs](https://odin-lang.org/docs/)
 - [Duan et al. (2025)](https://arxiv.org/abs/2504.17033)
+- [Daanoune et al. (2021)](https://www.sciencedirect.com/science/article/abs/pii/S1570870520307356)
+
