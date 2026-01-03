@@ -46,14 +46,14 @@ odin run .
 Or with arguments:
 
 ```bash
-odin run . [OPTIONS] [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT]
+odin run . [OPTIONS] [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT] [START_NODE_ID] [DESTINATION_NODE_ID]
 ```
 
 
 ### Usage
 
 ```
-Usage: pathfinder [OPTIONS] [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT]
+Usage: pathfinder [OPTIONS] [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT] [START_NODE_ID] [DESTINATION_NODE_ID]
 
 Options:
   -h, --help              Show this help message
@@ -66,6 +66,8 @@ Positional Arguments:
   MAX_EDGES                Maximum edges per node (default: 10)
   MIN_WEIGHT               Minimum edge weight (default: -10.0)
   MAX_WEIGHT               Maximum edge weight (default: 10.0)
+  START_NODE_ID            Start NodeId for the path calculation (default: 0)
+  DESTINATION_NODE_ID      Destination NodeId for the path calculation (default: 2)
 ```
 
 
@@ -83,6 +85,9 @@ odin run . 200
 
 # Custom graph parameters
 odin run . 200 2 15 -5.0 5.0
+
+# Custom graph with specific start and destination nodes
+odin run . 200 2 15 -5.0 5.0 0 42
 
 # Verbose output
 odin run . 200 --verbose
