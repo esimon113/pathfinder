@@ -7,18 +7,21 @@ import "core:math"
 import "core:slice"
 
 
-
 // ignore weights with BFS
-// Returns a dynamic array of node ids and the cost of the path
-bfs :: proc(G: Graph, start, dest: u64) -> [dynamic]u64 {
+// Returns a map of parent node ids: map[childId]=parentId
+// To get the shortest path to dst, "reconstructPath(parent, dest)" can be used
+bfs :: proc(G: Graph, start: u64) -> map[u64]Maybe(u64) {
 	visited := make([dynamic]bool, len(G))
-	defer delete(visited)
 	parent: map[u64]Maybe(u64) // maps child node id to parent node id
-	defer delete(parent)
+	defer {
+		delete(visited)
+		// delete(parent)
+	}
 	for g in G do visited[g] = false
 
 	pending: queue.Queue(u64)
 	queue.init(&pending)
+	defer queue.destroy(&pending)
 	queue.enqueue(&pending, start)
 
 	visited[start] = true
@@ -26,8 +29,6 @@ bfs :: proc(G: Graph, start, dest: u64) -> [dynamic]u64 {
 
 	for queue.len(pending) > 0 {
 		idx := queue.dequeue(&pending)
-
-		if idx == dest do break
 
 		for edge in G[idx] {
 			if !visited[edge.to] {
@@ -38,16 +39,19 @@ bfs :: proc(G: Graph, start, dest: u64) -> [dynamic]u64 {
 		}
 	}
 
-	return reconstructPath(parent, dest)
+	return parent
 }
 
 
-// Returns a dynamic array of node ids (path) and the cost of the path
-dijkstra :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, f32) {
+// Returns a map of parent node ids: "map[childId]=parentId" and a dynamic array of costs
+// To get the shortest path to dst, "reconstructPath(parent, dest)" can be used
+dijkstra :: proc(G: Graph, start: u64) -> (map[u64]Maybe(u64), [dynamic]f32) {
 	costs := make([dynamic]f32, len(G))
-	defer delete(costs)
 	parent: map[u64]Maybe(u64)
-	defer delete(parent)
+	// defer {
+	// 	delete(costs)
+	// 	delete(parent)
+	// }
 
 	slice.fill(costs[:], math.INF_F32)
 
@@ -62,6 +66,7 @@ dijkstra :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, f32) {
 		proc(a, b: PriorityNode) -> bool {return a.cost < b.cost},
 		priority_queue.default_swap_proc(PriorityNode),
 	)
+	defer priority_queue.destroy(&unvisited)
 
 	costs[start] = 0
 	parent[start] = nil
@@ -71,7 +76,6 @@ dijkstra :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, f32) {
 		current := priority_queue.pop(&unvisited)
 
 		if current.cost > costs[current.idx] do continue
-		if current.idx == dest do break
 
 		for edge in G[current.idx] {
 			newCost := costs[current.idx] + edge.weight
@@ -84,17 +88,16 @@ dijkstra :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, f32) {
 		}
 	}
 
-	return reconstructPath(parent, dest), costs[dest]
+	return parent, costs
 }
 
 
 // Regards negative edge weights
-// Returns a dynamic array of node ids (path) and the cost of the path
-bellmanFord :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, f32) {
+// Returns a map of parent node ids: "map[childId]=parentId", and a dynamic array of costs, and a success indication
+// To get the shortest path to dst, "reconstructPath(parent, dest)" can be used
+bellmanFord :: proc(G: Graph, start: u64) -> (map[u64]Maybe(u64), [dynamic]f32, bool) {
 	costs := make([dynamic]f32, len(G))
-	defer delete(costs)
 	parent: map[u64]Maybe(u64)
-	defer delete(parent)
 	allEdges := getAllEdges(G)
 	defer delete(allEdges)
 
@@ -119,11 +122,12 @@ bellmanFord :: proc(G: Graph, start, dest: u64) -> ([dynamic]u64, f32) {
 		if !math.is_inf_f32(costs[edge.from]) {
 			if costs[edge.to] > costs[edge.from] + edge.weight {
 				fmt.printfln("Detected negative cycle")
-				return {}, 0
+				delete(costs)
+				delete(parent)
+				return {}, {}, false
 			}
 		}
 	}
 
-	return reconstructPath(parent, dest), costs[dest]
+	return parent, costs, true
 }
-

@@ -4,7 +4,6 @@ import "core:fmt"
 import "core:slice"
 
 
-
 printGraph :: proc(g: Graph) {
 	fmt.println("\nGraph:")
 
@@ -46,3 +45,11 @@ getAllEdges :: proc(G: Graph) -> [dynamic]Edge {
 	return edges
 }
 
+
+// Properly deletes a Graph by first deleting all nested dynamic arrays
+deleteGraph :: proc(G: ^Graph) {
+	for _, edges in G^ {
+		delete(edges)
+	}
+	delete(G^)
+}

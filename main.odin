@@ -14,6 +14,8 @@ Parameters :: struct {
 	maxWeight:          f32,
 	withNegativeCycles: bool,
 	withVerbose:        bool,
+	startNodeId:        u64,
+	destinationNodeId:  u64,
 }
 
 
@@ -33,11 +35,13 @@ printHelp :: proc() {
 	fmt.println("  MAX_EDGES                Maximum edges per node (default: 10)")
 	fmt.println("  MIN_WEIGHT               Minimum edge weight (default: -10.0)")
 	fmt.println("  MAX_WEIGHT               Maximum edge weight (default: 10.0)")
+	fmt.println("  START_NODE_ID            Start NodeId for the path calculation.")
+	fmt.println("  DESTINATION_NODE_ID      Destination NodeId for the path calculation.")
 	fmt.println()
 	fmt.println("Examples:")
 	fmt.println("  pathfinder")
 	fmt.println("  pathfinder --help")
-	fmt.println("  pathfinder 200 2 15 -5.0 5.0")
+	fmt.println("  pathfinder 200 2 15 -5.0 5.0 0 42")
 	fmt.println("  pathfinder 200 --verbose")
 	fmt.println("  pathfinder 100 -n -v")
 }
@@ -52,6 +56,8 @@ parseArguments :: proc() -> (Parameters, bool) {
 		maxWeight          = 10,
 		withNegativeCycles = false,
 		withVerbose        = false,
+		startNodeId        = 0,
+		destinationNodeId  = 2,
 	}
 
 	args := os.args[1:] // ignore program name
@@ -87,6 +93,16 @@ parseArguments :: proc() -> (Parameters, bool) {
 		if len(args) >= 5 {
 			if val, ok := strconv.parse_f32(args[4]); ok {
 				params.maxWeight = val
+			}
+		}
+		if len(args) >= 6 {
+			if val, ok := strconv.parse_u64(args[5]); ok {
+				params.startNodeId = val
+			}
+		}
+		if len(args) >= 7 {
+			if val, ok := strconv.parse_u64(args[6]); ok {
+				params.destinationNodeId = val
 			}
 		}
 
@@ -135,29 +151,46 @@ main :: proc() {
 			params.maxWeight,
 		)
 	}
-	defer delete(G)
+	defer deleteGraph(&G)
 
 	if !ok do return
 	if params.withVerbose do printGraph(G)
 
-	start: u64 = 0
-	dest: u64 = 2
+	start: u64 = params.startNodeId
+	dest: u64 = params.destinationNodeId
 
 	if params.withVerbose do fmt.printfln("\nShortest path from %d to %d:", start, dest)
 
-	pathBFS := bfs(G, start, dest)
-	defer delete(pathBFS)
+	pathsBFS := bfs(G, start)
+	pathBFS := reconstructPath(pathsBFS, dest)
+	defer {
+		delete(pathsBFS)
+		delete(pathBFS)
+	}
 	if params.withVerbose do fmt.printfln("    BFS (dist: %d): %v", len(pathBFS), pathBFS)
 
 	if params.minWeight >= 0 {
-		pathDijk, costDijk := dijkstra(G, start, dest)
-		defer delete(pathDijk)
-		if params.withVerbose do fmt.printfln("    Dijkstra (cost: %f): %v", costDijk, pathDijk)
+		parentsDijk, costsDijk := dijkstra(G, start)
+		pathDijk := reconstructPath(parentsDijk, dest)
+		defer {
+			delete(parentsDijk)
+			delete(costsDijk)
+			delete(pathDijk)
+		}
+		if params.withVerbose do fmt.printfln("    Dijkstra (cost: %f): %v", costsDijk[dest], pathDijk)
 	}
 
 	if !params.withNegativeCycles {
-		pathBF, costBF := bellmanFord(G, start, dest)
-		defer delete(pathBF)
-		if params.withVerbose do fmt.printfln("    Bellman-Ford (cost: %f): %v", costBF, pathBF)
+		parentsBF, costsBF, okBF := bellmanFord(G, start)
+		defer {
+			delete(parentsBF)
+			delete(costsBF)
+		}
+
+		if okBF {
+			pathBF := reconstructPath(parentsBF, dest)
+			defer delete(pathBF)
+			if params.withVerbose do fmt.printfln("    Bellman-Ford (cost: %f): %v", costsBF[dest], pathBF)
+		}
 	}
 }
