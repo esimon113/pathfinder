@@ -13,10 +13,7 @@ import "core:slice"
 bfs :: proc(G: Graph, start: u64) -> map[u64]Maybe(u64) {
 	visited := make([dynamic]bool, len(G))
 	parent: map[u64]Maybe(u64) // maps child node id to parent node id
-	defer {
-		delete(visited)
-		// delete(parent)
-	}
+	defer delete(visited)
 	for g in G do visited[g] = false
 
 	pending: queue.Queue(u64)
@@ -48,10 +45,6 @@ bfs :: proc(G: Graph, start: u64) -> map[u64]Maybe(u64) {
 dijkstra :: proc(G: Graph, start: u64) -> (map[u64]Maybe(u64), [dynamic]f32) {
 	costs := make([dynamic]f32, len(G))
 	parent: map[u64]Maybe(u64)
-	// defer {
-	// 	delete(costs)
-	// 	delete(parent)
-	// }
 
 	slice.fill(costs[:], math.INF_F32)
 
@@ -130,4 +123,55 @@ bellmanFord :: proc(G: Graph, start: u64) -> (map[u64]Maybe(u64), [dynamic]f32, 
 	}
 
 	return parent, costs, true
+}
+
+
+// Solves the all-pairs-shortest-path problem by iteratively considering the nodes between each origin and destination
+// This implementation also allows for path reconstruction (the original algorithm only gives the costs)
+// Regards both positive and negative edge weights
+// Doesn't work with negative cycles
+// Returns a map of parent ids: "map[childId]=parentId" and a dynamic array of costs, and a success indication
+// Scales well for dense graphs
+// floydWarshall :: proc(G: Graph, start: u64) -> (map[u64]Maybe(u64), [dynamic][dynamic]f32, bool) {
+floydWarshall :: proc(G: Graph) -> ([dynamic][dynamic]Maybe(u64), [dynamic][dynamic]f32, bool) {
+	N := len(G)
+	costs := make([dynamic][dynamic]f32, len(G))
+	for &c in costs {
+		c = make([dynamic]f32, len(G))
+		slice.fill(c[:], math.inf_f32(1))
+	}
+	//slice.fill(c[:], math.inf_f32(1))
+	// parent: map[[2]u64]Maybe([2]u64)
+	parents := make([dynamic][dynamic]Maybe(u64), len(G))
+	for &p in parents {
+		p = make([dynamic]Maybe(u64), len(G))
+		slice.fill(p[:], nil)
+	}
+
+	allEdges := getAllEdges(G)
+	defer delete(allEdges)
+
+	for edge in allEdges {
+		costs[edge.from][edge.to] = edge.weight
+		parents[edge.from][edge.to] = edge.from
+	}
+
+	for v in G {
+		costs[v][v] = 0
+		parents[v][v] = v
+	}
+
+	for k in 0 ..< N {
+		for i in 0 ..< N {
+			for j in 0 ..< N {
+				if costs[i][j] > costs[i][k] + costs[k][j] {
+					costs[i][j] = costs[i][k] + costs[k][j]
+					parents[i][j] = parents[k][j]
+				}
+			}
+		}
+	}
+
+
+	return parents, costs, true
 }

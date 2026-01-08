@@ -154,7 +154,7 @@ main :: proc() {
 	defer deleteGraph(&G)
 
 	if !ok do return
-	if params.withVerbose do printGraph(G)
+	// if params.withVerbose do printGraph(G)
 
 	start: u64 = params.startNodeId
 	dest: u64 = params.destinationNodeId
@@ -191,6 +191,21 @@ main :: proc() {
 			pathBF := reconstructPath(parentsBF, dest)
 			defer delete(pathBF)
 			if params.withVerbose do fmt.printfln("    Bellman-Ford (cost: %f): %v", costsBF[dest], pathBF)
+		}
+
+		// Floyd-Warshall Algorithm:
+		parentsFW, costsFW, okFW := floydWarshall(G)
+		defer {
+			delete(parentsFW)
+			delete(costsFW)
+		}
+
+		if okFW {
+			pathFW, okFWPath := reconstructPathForPair(parentsFW, start, dest)
+			defer delete(pathFW)
+			if okFWPath {
+				if params.withVerbose do fmt.printfln("    Floyd-Warshall (cost: %f): %v", costsFW[start][dest], pathFW)
+			}
 		}
 	}
 }

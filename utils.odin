@@ -32,6 +32,32 @@ reconstructPath :: proc(parent: map[u64]Maybe(u64), dest: u64) -> [dynamic]u64 {
 }
 
 
+reconstructPathForPair :: proc(
+	parents: [dynamic][dynamic]Maybe(u64),
+	u, v: u64,
+) -> (
+	[dynamic]u64,
+	bool,
+) {
+	path: [dynamic]u64
+	v := v
+	u := u
+
+	if parents[u][v] == nil do return {}, false
+
+	append(&path, v)
+
+	for u != v {
+		v = parents[u][v].?
+		append(&path, v)
+	}
+
+	slice.reverse(path[:])
+
+	return path, true
+}
+
+
 getAllEdges :: proc(G: Graph) -> [dynamic]Edge {
 	edges: [dynamic]Edge
 
@@ -43,6 +69,20 @@ getAllEdges :: proc(G: Graph) -> [dynamic]Edge {
 		}
 	}
 	return edges
+}
+
+
+// Returns the Edge (fromNodeId->toNodeId) if it exists and a success indicator
+getEdge :: proc(G: Graph, from, to: u64) -> (Edge, bool) {
+	allEdges := getAllEdges(G)
+	defer delete(allEdges)
+
+	for e in allEdges {
+		if e.from == from && e.to == to {
+			return e, true
+		}
+	}
+	return {}, false
 }
 
 
