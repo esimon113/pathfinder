@@ -53,7 +53,7 @@ odin run . [OPTIONS] [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGH
 ### Usage
 
 ```
-Usage: pathfinder [OPTIONS] [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT] [START_NODE_ID] [DESTINATION_NODE_ID]
+Usage: pathfinder [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT] [START_NODE_ID] [DESTINATION_NODE_ID] [OPTIONS]
 
 Options:
   -h, --help              Show this help message
