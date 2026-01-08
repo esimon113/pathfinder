@@ -72,17 +72,28 @@ getAllEdges :: proc(G: Graph) -> [dynamic]Edge {
 }
 
 
-// Returns the Edge (fromNodeId->toNodeId) if it exists and a success indicator
-getEdge :: proc(G: Graph, from, to: u64) -> (Edge, bool) {
+getEdgeFromGraph :: proc(G: Graph, from, to: u64) -> (Edge, bool) {
 	allEdges := getAllEdges(G)
 	defer delete(allEdges)
 
+	return getEdge(allEdges, from, to)
+}
+
+
+getEdgeFromEdges :: proc(allEdges: [dynamic]Edge, from, to: u64) -> (Edge, bool) {
 	for e in allEdges {
 		if e.from == from && e.to == to {
 			return e, true
 		}
 	}
 	return {}, false
+}
+
+
+// Returns the Edge (fromNodeId->toNodeId) if it exists and a success indicator
+getEdge :: proc {
+	getEdgeFromEdges,
+	getEdgeFromGraph,
 }
 
 

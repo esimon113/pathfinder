@@ -21,7 +21,7 @@ Parameters :: struct {
 
 printHelp :: proc() {
 	fmt.println(
-		"Usage: pathfinder [OPTIONS] [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT]",
+		"Usage: pathfinder [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT] [OPTIONS]",
 	)
 	fmt.println()
 	fmt.println("Options:")
@@ -194,18 +194,19 @@ main :: proc() {
 		}
 
 		// Floyd-Warshall Algorithm:
-		parentsFW, costsFW, okFW := floydWarshall(G)
+		parentsFW, costsFW := floydWarshall(G)
 		defer {
 			delete(parentsFW)
 			delete(costsFW)
 		}
 
-		if okFW {
-			pathFW, okFWPath := reconstructPathForPair(parentsFW, start, dest)
-			defer delete(pathFW)
-			if okFWPath {
-				if params.withVerbose do fmt.printfln("    Floyd-Warshall (cost: %f): %v", costsFW[start][dest], pathFW)
-			}
+		pathFW, okFWPath := reconstructPathForPair(parentsFW, start, dest)
+		defer delete(pathFW)
+		if okFWPath {
+			if params.withVerbose do fmt.printfln("    Floyd-Warshall (cost: %f): %v", costsFW[start][dest], pathFW)
 		}
+
+		graphDiameter := diameter(G)
+		if params.withVerbose do fmt.printfln("\nGraph-Diameter: %f", graphDiameter)
 	}
 }

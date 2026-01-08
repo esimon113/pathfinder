@@ -128,20 +128,16 @@ bellmanFord :: proc(G: Graph, start: u64) -> (map[u64]Maybe(u64), [dynamic]f32, 
 
 // Solves the all-pairs-shortest-path problem by iteratively considering the nodes between each origin and destination
 // This implementation also allows for path reconstruction (the original algorithm only gives the costs)
-// Regards both positive and negative edge weights
-// Doesn't work with negative cycles
-// Returns a map of parent ids: "map[childId]=parentId" and a dynamic array of costs, and a success indication
-// Scales well for dense graphs
-// floydWarshall :: proc(G: Graph, start: u64) -> (map[u64]Maybe(u64), [dynamic][dynamic]f32, bool) {
-floydWarshall :: proc(G: Graph) -> ([dynamic][dynamic]Maybe(u64), [dynamic][dynamic]f32, bool) {
+// Regards both positive and negative edge weights; doesn't work with negative cycles; scales well for dense graphs
+// Returns matrices for parents and for costs for all pairs  shortest-paths
+floydWarshall :: proc(G: Graph) -> ([dynamic][dynamic]Maybe(u64), [dynamic][dynamic]f32) {
 	N := len(G)
 	costs := make([dynamic][dynamic]f32, len(G))
 	for &c in costs {
 		c = make([dynamic]f32, len(G))
 		slice.fill(c[:], math.inf_f32(1))
 	}
-	//slice.fill(c[:], math.inf_f32(1))
-	// parent: map[[2]u64]Maybe([2]u64)
+
 	parents := make([dynamic][dynamic]Maybe(u64), len(G))
 	for &p in parents {
 		p = make([dynamic]Maybe(u64), len(G))
@@ -173,5 +169,27 @@ floydWarshall :: proc(G: Graph) -> ([dynamic][dynamic]Maybe(u64), [dynamic][dyna
 	}
 
 
-	return parents, costs, true
+	return parents, costs
+}
+
+
+diameter :: proc(G: Graph) -> f32 {
+	parents, costs := floydWarshall(G)
+	defer {
+		delete(parents)
+		delete(costs)
+	}
+
+	maxCost: f32 = 0.0
+
+	for i in 0 ..< u64(len(G)) {
+		for j in 0 ..< u64(len(G)) {
+			cost := costs[i][j]
+			if cost > maxCost {
+				maxCost = cost
+			}
+		}
+	}
+
+	return maxCost
 }
