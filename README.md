@@ -47,7 +47,8 @@ odin run .
 Or with arguments:
 
 ```bash
-odin run . [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT] [START_NODE_ID] [DESTINATION_NODE_ID] [OPTIONS]
+odin build .
+./pathfinder [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT] [START_NODE_ID] [DESTINATION_NODE_ID] [OPTIONS]
 ```
 
 
