@@ -100,7 +100,7 @@ odin run . 100 -n -v
 ## Inspirations / Future Ideas
 
 ### Shortest Paths
-- [Floyd-Warshall Algorithm](https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm)
+- ~~[Floyd-Warshall Algorithm](https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm)~~
 - [A* Search Algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm)
 - [Johnson's Algorithm](https://en.wikipedia.org/wiki/Johnson%27s_algorithm)
 - [Duan et al. (2025)](https://arxiv.org/abs/2504.17033)
