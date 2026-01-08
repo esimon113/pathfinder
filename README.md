@@ -19,6 +19,7 @@ This project implements several graph pathfinding algorithms:
 - **BFS (Breadth-First Search)**: Finds shortest paths in unweighted graphs
 - **Dijkstra's Algorithm**: Finds shortest paths in graphs with non-negative edge weights
 - **Bellman-Ford Algorithm**: Finds shortest paths in graphs that may contain negative edge weights (but no negative cycles)
+- Floyd-Warshall Algorithm: Solves all-pairs shortest-path problem for graphs containing both positive and negative edges, but also no negative cycles
 
 The project includes graph generation utilities that can create random directed graphs with configurable parameters. These graphs are made reproducible by using the number of nodes to generate as the seed for the random number generator.
 
@@ -30,7 +31,7 @@ pathfinder/
 ├── main.odin              # Entry point and CLI
 ├── types.odin             # Type definitions (Edge, Graph)
 ├── graphGenerator.odin    # Graph generation functions
-├── algorithms.odin        # Pathfinding algorithms
+├── shortestPaths.odin     # Pathfinding algorithms
 └── utils.odin             # Utility functions (path reconstruction, graph printing)
 ```
 
@@ -46,7 +47,7 @@ odin run .
 Or with arguments:
 
 ```bash
-odin run . [OPTIONS] [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT] [START_NODE_ID] [DESTINATION_NODE_ID]
+odin run . [NUM_NODES] [MIN_EDGES] [MAX_EDGES] [MIN_WEIGHT] [MAX_WEIGHT] [START_NODE_ID] [DESTINATION_NODE_ID] [OPTIONS]
 ```
 
 
